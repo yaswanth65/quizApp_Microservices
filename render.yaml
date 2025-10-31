@@ -1,0 +1,67 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: quiz-postgres
+    env: docker
+    plan: free
+    
+  # Service Registry (Eureka)
+  - type: web
+    name: service-registry
+    env: docker
+    dockerfilePath: ./service-registry/Dockerfile
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: EUREKA_HOSTNAME
+        value: service-registry
+    
+  # Question Service
+  - type: web
+    name: question-service
+    env: docker
+    dockerfilePath: ./question-service/Dockerfile
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: quiz-postgres
+          property: connectionString
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: https://service-registry.onrender.com/eureka/
+      - key: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+        value: false
+    
+  # Quiz Service
+  - type: web
+    name: quiz-service
+    env: docker
+    dockerfilePath: ./quiz-service/Dockerfile
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: quiz-postgres
+          property: connectionString
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: https://service-registry.onrender.com/eureka/
+      - key: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+        value: false
+    
+  # API Gateway
+  - type: web
+    name: api-gateway
+    env: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    plan: free
+    envVars:
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: https://service-registry.onrender.com/eureka/
+      - key: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+        value: false
+
+databases:
+  - name: quiz-postgres
+    databaseName: quizapp
+    user: quizuser
+    plan: free
