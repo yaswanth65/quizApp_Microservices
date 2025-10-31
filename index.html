@@ -1,0 +1,997 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .page { display: none; }
+        .page.active { display: block; }
+        body { background-color: #f0f4f8; }
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn-primary { background-color: #4f46e5; color: white; }
+        .btn-primary:hover { background-color: #4338ca; }
+        .btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body class="font-sans">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-600">
+                <i class="fas fa-brain mr-2"></i>Quiz Master
+            </h1>
+            <div>
+                <button data-page="home" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">Home</button>
+                <button data-page="add-question-page" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">Add Question</button>
+                <button data-page="all-questions-page" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">View Questions</button>
+                <button data-page="category-questions-page" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">Questions by Category</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <div id="home" class="page active">
+            <section id="create-quiz-section" class="card p-8 mb-10">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Create a New Quiz</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="category" class="block text-gray-700 font-semibold mb-2">Category</label>
+                        <select id="category" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label for="num-questions" class="block text-gray-700 font-semibold mb-2">Number of Questions</label>
+                        <input type="number" id="num-questions" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" min="1" value="5">
+                    </div>
+                    <div>
+                        <label for="quiz-title-input" class="block text-gray-700 font-semibold mb-2">Quiz Title</label>
+                        <input type="text" id="quiz-title-input" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 'Java Basics'">
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="create-quiz-btn" class="btn btn-primary w-full md:w-auto">
+                        <i class="fas fa-plus-circle mr-2"></i>Create Quiz
+                    </button>
+                </div>
+            </section>
+
+            <section id="available-quizzes-section">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Available Quizzes</h2>
+                <div id="quiz-list" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+            </section>
+        </div>
+
+        <div id="quiz-page" class="page">
+            <h1 id="quiz-title-display" class="text-4xl font-bold mb-6 text-center text-gray-800"></h1>
+            <div id="question-container" class="card p-8">
+                <p id="question-counter" class="text-right text-gray-500 font-semibold mb-4"></p>
+                <p id="question-text" class="text-2xl mb-6 font-medium text-gray-700"></p>
+                <div id="options" class="space-y-4"></div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="btn bg-gray-300 text-gray-800 hover:bg-gray-400">Previous</button>
+                    <button id="next-btn" class="btn btn-primary">Next</button>
+                    <button id="submit-btn" class="btn bg-green-500 text-white hover:bg-green-600 hidden">Submit Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-page" class="page text-center">
+            <div class="card p-10 max-w-lg mx-auto">
+                <h1 class="text-4xl font-bold mb-4 text-gray-800">Quiz Complete!</h1>
+                <p id="score" class="text-3xl font-semibold mb-8 text-indigo-600"></p>
+                <button id="back-home-btn" class="btn btn-primary"><i class="fas fa-home mr-2"></i>Back to Home</button>
+            </div>
+        </div>
+
+        <div id="add-question-page" class="page">
+            <div class="card p-8 max-w-2xl mx-auto">
+                <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Add a New Question</h1>
+                <div class="space-y-4">
+                    <input type="text" id="new-q-title" class="w-full p-3 border rounded-lg" placeholder="Question Title">
+                    <input type="text" id="new-q-opt1" class="w-full p-3 border rounded-lg" placeholder="Option 1">
+                    <input type="text" id="new-q-opt2" class="w-full p-3 border rounded-lg" placeholder="Option 2">
+                    <input type="text" id="new-q-opt3" class="w-full p-3 border rounded-lg" placeholder="Option 3">
+                    <input type="text" id="new-q-opt4" class="w-full p-3 border rounded-lg" placeholder="Option 4">
+                    <input type="text" id="new-q-answer" class="w-full p-3 border rounded-lg" placeholder="Right Answer">
+                    <input type="text" id="new-q-category" class="w-full p-3 border rounded-lg" placeholder="Category (e.g., Java, Python)">
+                    <select id="new-q-difficulty" class="w-full p-3 border rounded-lg">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                    <button id="add-question-submit-btn" class="btn btn-primary w-full"><i class="fas fa-paper-plane mr-2"></i>Submit Question</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="all-questions-page" class="page">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">All Stored Questions</h1>
+            <div class="card p-6">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Title</th>
+                            <th class="p-3">Category</th>
+                            <th class="p-3">Difficulty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-questions-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="category-questions-page" class="page">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">View Questions by Category</h1>
+            <div class="card p-8">
+                <div class="mb-6">
+                    <label for="category-filter" class="block text-gray-700 font-semibold mb-2">Select a Category:</label>
+                    <select id="category-filter" class="w-full md:w-1/2 p-3 border rounded-lg"></select>
+                </div>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Title</th>
+                            <th class="p-3">Right Answer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="category-questions-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = 'http://localhost:8080';
+
+            // State
+            let currentQuizId = null;
+            let currentQuestionIndex = 0;
+            let questions = [];
+            let userResponses = [];
+
+            // Page Elements
+            const pages = document.querySelectorAll('.page');
+            const navButtons = document.querySelectorAll('.nav-btn');
+
+            // --- Page Navigation ---
+            function showPage(pageId) {
+                pages.forEach(page => page.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+            }
+
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageId = btn.getAttribute('data-page');
+                    showPage(pageId);
+                    // Refresh data when navigating
+                    if (pageId === 'home') {
+                        fetchCategoriesAndQuizzes();
+                    } else if (pageId === 'all-questions-page') {
+                        fetchAllQuestions();
+                    } else if (pageId === 'category-questions-page') {
+                        populateCategoryFilter();
+                    }
+                });
+            });
+            
+            // --- API Functions ---
+            const api = {
+                get: async (endpoint) => {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}${endpoint}`);
+                        if (!response.ok) throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                        // Handle cases where the response might be empty
+                        const text = await response.text();
+                        return text ? JSON.parse(text) : null;
+                    } catch (error) {
+                        console.error(`GET Error on ${endpoint}:`, error);
+                        alert(`Failed to fetch data. Please check if the backend is running and the CORS configuration is correct.`);
+                        throw error;
+                    }
+                },
+                post: async (endpoint, body) => {
+                     try {
+                        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body),
+                        });
+                        if (!response.ok) throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                         const text = await response.text();
+                         try {
+                            return JSON.parse(text);
+                         } catch(e) {
+                             return text;
+                         }
+                    } catch (error) {
+                        console.error(`POST Error on ${endpoint}:`, error);
+                        alert(`Failed to submit data. Please check the console for details.`);
+                        throw error;
+                    }
+                }
+            };
+            
+            // --- Home Page Logic ---
+            async function fetchCategoriesAndQuizzes() {
+                try {
+                    const allQuestions = await api.get('/question/allquestions');
+                    const categories = [...new Set(allQuestions.map(q => q.category))];
+                    const categorySelect = document.getElementById('category');
+                    categorySelect.innerHTML = '<option value="">Select Category</option>';
+                    categories.forEach(cat => categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`);
+
+                    const quizzes = await api.get('/quiz/all');
+                    const quizList = document.getElementById('quiz-list');
+                    quizList.innerHTML = '';
+                    if (!quizzes || quizzes.length === 0) {
+                        quizList.innerHTML = '<p class="text-gray-600 col-span-full text-center">No quizzes available. Create one to get started!</p>';
+                        return;
+                    }
+                    quizzes.forEach(quiz => {
+                        const quizCard = document.createElement('div');
+                        quizCard.className = 'card p-6 flex flex-col justify-between';
+                        quizCard.innerHTML = `
+                            <div>
+                                <h3 class="text-xl font-bold mb-2 text-gray-800">${quiz.title}</h3>
+                                <p class="text-gray-600 mb-4">Contains ${quiz.questions.length} questions.</p>
+                            </div>
+                            <button class="start-quiz-btn btn btn-primary mt-4" data-id="${quiz.id}">
+                                <i class="fas fa-play-circle mr-2"></i>Start Quiz
+                            </button>`;
+                        quizList.appendChild(quizCard);
+                    });
+                    document.querySelectorAll('.start-quiz-btn').forEach(btn => btn.addEventListener('click', startQuiz));
+                } catch (error) {
+                    console.error("Failed to load home page data:", error);
+                }
+            }
+
+            document.getElementById('create-quiz-btn').addEventListener('click', async () => {
+                const category = document.getElementById('category').value;
+                const numq = document.getElementById('num-questions').value;
+                const title = document.getElementById('quiz-title-input').value;
+
+                if (!category || !numq || !title) {
+                    alert('Please fill out all fields to create a quiz.');
+                    return;
+                }
+                try {
+                    await api.post(`/quiz/create?catagory=${encodeURIComponent(category)}&noq=${numq}&title=${encodeURIComponent(title)}`, {});
+                    alert('Quiz created successfully!');
+                    fetchCategoriesAndQuizzes(); // Refresh the list
+                    document.getElementById('quiz-title-input').value = '';
+                } catch (error) {
+                     console.error("Failed to create quiz:", error);
+                }
+            });
+            
+            // --- Quiz Logic ---
+            async function startQuiz(event) {
+                currentQuizId = event.target.dataset.id;
+                try {
+                    questions = await api.get(`/quiz/get/${currentQuizId}`);
+                    if (!questions || questions.length === 0) {
+                        alert('This quiz has no questions. Please add questions to the corresponding category.');
+                        return;
+                    }
+                    const quiz = (await api.get('/quiz/all')).find(q => q.id == currentQuizId);
+                    document.getElementById('quiz-title-display').textContent = quiz.title;
+                    currentQuestionIndex = 0;
+                    userResponses = new Array(questions.length).fill(null);
+                    showPage('quiz-page');
+                    displayQuestion();
+                } catch (error) {
+                    console.error("Failed to start quiz:", error);
+                }
+            }
+            
+            function displayQuestion() {
+                const question = questions[currentQuestionIndex];
+                document.getElementById('question-counter').textContent = `Question ${currentQuestionIndex + 1} / ${questions.length}`;
+                document.getElementById('question-text').textContent = question.questionTitle;
+                
+                const optionsContainer = document.getElementById('options');
+                optionsContainer.innerHTML = '';
+                const options = [question.option1, question.option2, question.option3, question.option4];
+                options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'p-4 border rounded-lg hover:bg-indigo-50 cursor-pointer';
+                    optionEl.innerHTML = `<label class="flex items-center w-full cursor-pointer">
+                        <input type="radio" name="option" value="${option}" class="mr-4 h-5 w-5 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-lg">${option}</span></label>`;
+                    optionsContainer.appendChild(optionEl);
+                });
+
+                if (userResponses[currentQuestionIndex]) {
+                    document.querySelector(`input[value="${userResponses[currentQuestionIndex].response}"]`).checked = true;
+                }
+
+                document.getElementById('prev-btn').classList.toggle('hidden', currentQuestionIndex === 0);
+                document.getElementById('next-btn').classList.toggle('hidden', currentQuestionIndex === questions.length - 1);
+                document.getElementById('submit-btn').classList.toggle('hidden', currentQuestionIndex !== questions.length - 1);
+            }
+
+            function saveResponse() {
+                const selected = document.querySelector('input[name="option"]:checked');
+                if (selected) {
+                    userResponses[currentQuestionIndex] = { id: questions[currentQuestionIndex].id, response: selected.value };
+                }
+            }
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                saveResponse();
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    displayQuestion();
+                }
+            });
+
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                saveResponse();
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    displayQuestion();
+                }
+            });
+
+            document.getElementById('submit-btn').addEventListener('click', async () => {
+                saveResponse();
+                const formattedResponses = userResponses.filter(r => r !== null);
+                if (formattedResponses.length !== questions.length) {
+                    if(!confirm("You have unanswered questions. Are you sure you want to submit?")) {
+                        return;
+                    }
+                }
+                try {
+                    const result = await api.post(`/quiz/submit/${currentQuizId}`, formattedResponses);
+                    document.getElementById('score').textContent = `Your Score: ${result} / ${questions.length}`;
+                    showPage('result-page');
+                } catch (error) {
+                    console.error("Failed to submit quiz:", error);
+                }
+            });
+
+            document.getElementById('back-home-btn').addEventListener('click', () => {
+                showPage('home');
+                fetchCategoriesAndQuizzes();
+            });
+
+            // --- Add Question Page Logic ---
+            document.getElementById('add-question-submit-btn').addEventListener('click', async () => {
+                const newQuestion = {
+                    questionTitle: document.getElementById('new-q-title').value,
+                    option1: document.getElementById('new-q-opt1').value,
+                    option2: document.getElementById('new-q-opt2').value,
+                    option3: document.getElementById('new-q-opt3').value,
+                    option4: document.getElementById('new-q-opt4').value,
+                    rightAnswer: document.getElementById('new-q-answer').value,
+                    category: document.getElementById('new-q-category').value,
+                    difficultylevel: document.getElementById('new-q-difficulty').value
+                };
+
+                if (Object.values(newQuestion).some(val => !val)) {
+                    alert('Please fill out all fields.');
+                    return;
+                }
+                try {
+                    await api.post('/question/addquestion', newQuestion);
+                    alert('Question added successfully!');
+                    // Clear form
+                    document.querySelectorAll('#add-question-page input, #add-question-page select').forEach(el => el.value = '');
+                } catch (error) {
+                    console.error("Failed to add question:", error);
+                }
+            });
+
+            // --- View All Questions Page ---
+            async function fetchAllQuestions() {
+                try {
+                    const allQuestions = await api.get('/question/allquestions');
+                    const tableBody = document.getElementById('all-questions-table');
+                    tableBody.innerHTML = '';
+                    if (!allQuestions || allQuestions.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" class="text-center p-4">No questions found.</td></tr>';
+                        return;
+                    }
+                    allQuestions.forEach(q => {
+                        tableBody.innerHTML += `<tr class="border-b border-gray-100">
+                            <td class="p-3">${q.id}</td>
+                            <td class="p-3">${q.questionTitle}</td>
+                            <td class="p-3">${q.category}</td>
+                            <td class="p-3">${q.difficultylevel}</td>
+                        </tr>`;
+                    });
+                } catch (error) {
+                    console.error("Failed to fetch all questions:", error);
+                }
+            }
+
+            // --- Questions by Category Page ---
+            async function populateCategoryFilter() {
+                try {
+                    const allQuestions = await api.get('/question/allquestions');
+                    const categories = [...new Set(allQuestions.map(q => q.category))];
+                    const categoryFilter = document.getElementById('category-filter');
+                    categoryFilter.innerHTML = '<option value="">-- Select a Category --</option>';
+                    categories.forEach(cat => categoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`);
+                } catch (error) {
+                    console.error("Failed to populate category filter:", error);
+                }
+            }
+
+            document.getElementById('category-filter').addEventListener('change', async (e) => {
+                const category = e.target.value;
+                const tableBody = document.getElementById('category-questions-table');
+                if (!category) {
+                    tableBody.innerHTML = '';
+                    return;
+                }
+                try {
+                    const questionsByCategory = await api.get(`/question/catagory/${category}`);
+                    tableBody.innerHTML = '';
+                    if (!questionsByCategory || questionsByCategory.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">No questions found for this category.</td></tr>';
+                        return;
+                    }
+                    questionsByCategory.forEach(q => {
+                        tableBody.innerHTML += `<tr class="border-b border-gray-100">
+                            <td class="p-3">${q.id}</td>
+                            <td class="p-3">${q.questionTitle}</td>
+                            <td class="p-3">${q.rightAnswer}</td>
+                        </tr>`;
+                    });
+                } catch (error) {
+                     console.error("Failed to fetch questions by category:", error);
+                }
+            });
+
+            // --- Initial Load ---
+            fetchCategoriesAndQuizzes();
+        });
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .page { display: none; }
+        .page.active { display: block; }
+        body { background-color: #f0f4f8; }
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn-primary { background-color: #4f46e5; color: white; }
+        .btn-primary:hover { background-color: #4338ca; }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body class="font-sans">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-600">
+                <i class="fas fa-brain mr-2"></i>Quiz Master
+            </h1>
+            <div>
+                <button data-page="home" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">Home</button>
+                <button data-page="add-question-page" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">Add Question</button>
+                <button data-page="all-questions-page" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">View Questions</button>
+                <button data-page="category-questions-page" class="nav-btn text-gray-600 hover:text-indigo-600 font-semibold px-4 py-2">Questions by Category</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <!-- Home Page: Create & View Quizzes -->
+        <div id="home" class="page active">
+            <section id="create-quiz-section" class="card p-8 mb-10">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Create a New Quiz</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="category" class="block text-gray-700 font-semibold mb-2">Category</label>
+                        <select id="category" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label for="num-questions" class="block text-gray-700 font-semibold mb-2">Number of Questions</label>
+                        <input type="number" id="num-questions" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" min="1" value="5">
+                    </div>
+                    <div>
+                        <label for="quiz-title-input" class="block text-gray-700 font-semibold mb-2">Quiz Title</label>
+                        <input type="text" id="quiz-title-input" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 'Java Basics'">
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="create-quiz-btn" class="btn btn-primary w-full md:w-auto">
+                        <i class="fas fa-plus-circle mr-2"></i>Create Quiz
+                    </button>
+                </div>
+            </section>
+
+            <section id="available-quizzes-section">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Available Quizzes</h2>
+                <div id="quiz-list" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+            </section>
+        </div>
+
+        <!-- Quiz Taking Page -->
+        <div id="quiz-page" class="page">
+            <h1 id="quiz-title-display" class="text-4xl font-bold mb-6 text-center text-gray-800"></h1>
+            <div id="question-container" class="card p-8">
+                <p id="question-counter" class="text-right text-gray-500 font-semibold mb-4"></p>
+                <p id="question-text" class="text-2xl mb-6 font-medium text-gray-700"></p>
+                <div id="options" class="space-y-4"></div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="btn bg-gray-300 text-gray-800 hover:bg-gray-400">Previous</button>
+                    <button id="next-btn" class="btn btn-primary">Next</button>
+                    <button id="submit-btn" class="btn bg-green-500 text-white hover:bg-green-600 hidden">Submit Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Page -->
+        <div id="result-page" class="page text-center">
+            <div class="card p-10 max-w-lg mx-auto">
+                <h1 class="text-4xl font-bold mb-4 text-gray-800">Quiz Complete!</h1>
+                <p id="score" class="text-3xl font-semibold mb-8 text-indigo-600"></p>
+                <button id="back-home-btn" class="btn btn-primary"><i class="fas fa-home mr-2"></i>Back to Home</button>
+            </div>
+        </div>
+
+        <!-- Add Question Page -->
+        <div id="add-question-page" class="page">
+            <div class="card p-8 max-w-2xl mx-auto">
+                <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Add a New Question</h1>
+                <div class="space-y-4">
+                    <input type="text" id="new-q-title" class="w-full p-3 border rounded-lg" placeholder="Question Title">
+                    <input type="text" id="new-q-opt1" class="w-full p-3 border rounded-lg" placeholder="Option 1">
+                    <input type="text" id="new-q-opt2" class="w-full p-3 border rounded-lg" placeholder="Option 2">
+                    <input type="text" id="new-q-opt3" class="w-full p-3 border rounded-lg" placeholder="Option 3">
+                    <input type="text" id="new-q-opt4" class="w-full p-3 border rounded-lg" placeholder="Option 4">
+                    <input type="text" id="new-q-answer" class="w-full p-3 border rounded-lg" placeholder="Right Answer">
+                    <input type="text" id="new-q-category" class="w-full p-3 border rounded-lg" placeholder="Category (e.g., Java, Python)">
+                    <select id="new-q-difficulty" class="w-full p-3 border rounded-lg">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                    <button id="add-question-submit-btn" class="btn btn-primary w-full"><i class="fas fa-paper-plane mr-2"></i>Submit Question</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View All Questions Page -->
+        <div id="all-questions-page" class="page">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">All Stored Questions</h1>
+            <div class="card p-6">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Title</th>
+                            <th class="p-3">Category</th>
+                            <th class="p-3">Difficulty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-questions-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- View Questions by Category Page -->
+        <div id="category-questions-page" class="page">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">View Questions by Category</h1>
+            <div class="card p-8">
+                <div class="mb-6">
+                    <label for="category-filter" class="block text-gray-700 font-semibold mb-2">Select a Category:</label>
+                    <select id="category-filter" class="w-full md:w-1/2 p-3 border rounded-lg"></select>
+                </div>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="p-3">ID</th>
+                            <th class="p-3">Title</th>
+                            <th class="p-3">Right Answer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="category-questions-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = 'http://localhost:8080';
+
+            // State
+            let currentQuizId = null;
+            let currentQuestionIndex = 0;
+            let questions = [];
+            let userResponses = [];
+
+            // Page Elements
+            const pages = document.querySelectorAll('.page');
+            const navButtons = document.querySelectorAll('.nav-btn');
+
+            // --- Page Navigation ---
+            function showPage(pageId) {
+                pages.forEach(page => page.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+            }
+
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageId = btn.getAttribute('data-page');
+                    showPage(pageId);
+                    // Refresh data when navigating
+                    if (pageId === 'home') {
+                        fetchCategoriesAndQuizzes();
+                    } else if (pageId === 'all-questions-page') {
+                        fetchAllQuestions();
+                    } else if (pageId === 'category-questions-page') {
+                        populateCategoryFilter();
+                    }
+                });
+            });
+            
+            // --- API Functions ---
+            const api = {
+                get: async (endpoint) => {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}${endpoint}`);
+                        if (!response.ok) throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                        const text = await response.text();
+                        return text ? JSON.parse(text) : null;
+                    } catch (error) {
+                        console.error(`GET Error on ${endpoint}:`, error);
+                        alert(`Failed to fetch data. Please check if the backend is running.`);
+                        throw error;
+                    }
+                },
+                post: async (endpoint, body) => {
+                     try {
+                        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body),
+                        });
+                        if (!response.ok) throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                         const text = await response.text();
+                         try {
+                            return JSON.parse(text);
+                         } catch(e) {
+                             return text;
+                         }
+                    } catch (error) {
+                        console.error(`POST Error on ${endpoint}:`, error);
+                        alert(`Failed to submit data. Please check the console for details.`);
+                        throw error;
+                    }
+                },
+                // NEW: Delete method
+                delete: async (endpoint) => {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                            method: 'DELETE',
+                        });
+                        if (!response.ok) throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                        // Handle 204 No Content or other successful responses
+                        return response.status === 204 ? null : response.json();
+                    } catch (error) {
+                        console.error(`DELETE Error on ${endpoint}:`, error);
+                        alert(`Failed to delete item. Please check the console for details.`);
+                        throw error;
+                    }
+                }
+            };
+            
+            // --- Home Page Logic ---
+            async function fetchCategoriesAndQuizzes() {
+                try {
+                    const allQuestions = await api.get('/question/allquestions');
+                    const categories = [...new Set(allQuestions.map(q => q.category))];
+                    const categorySelect = document.getElementById('category');
+                    categorySelect.innerHTML = '<option value="">Select Category</option>';
+                    categories.forEach(cat => categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`);
+
+                    const quizzes = await api.get('/quiz/all');
+                    const quizList = document.getElementById('quiz-list');
+                    quizList.innerHTML = '';
+                    if (!quizzes || quizzes.length === 0) {
+                        quizList.innerHTML = '<p class="text-gray-600 col-span-full text-center">No quizzes available. Create one to get started!</p>';
+                        return;
+                    }
+                    quizzes.forEach(quiz => {
+                        const quizCard = document.createElement('div');
+                        quizCard.className = 'card p-6 flex flex-col';
+                        quizCard.innerHTML = `
+                            <div class="flex-grow">
+                                <h3 class="text-xl font-bold mb-2 text-gray-800">${quiz.title}</h3>
+                                <p class="text-gray-600 mb-4">Contains ${quiz.questions.length} questions.</p>
+                            </div>
+                            <div class="mt-4 flex gap-x-2">
+                                <button class="start-quiz-btn btn btn-primary flex-1" data-id="${quiz.id}">
+                                    <i class="fas fa-play-circle mr-2"></i>Start
+                                </button>
+                                <button class="delete-quiz-btn btn btn-danger" data-id="${quiz.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>`;
+                        quizList.appendChild(quizCard);
+                    });
+                    // Add event listeners after creating the buttons
+                    document.querySelectorAll('.start-quiz-btn').forEach(btn => btn.addEventListener('click', startQuiz));
+                    document.querySelectorAll('.delete-quiz-btn').forEach(btn => btn.addEventListener('click', deleteQuiz));
+                } catch (error) {
+                    console.error("Failed to load home page data:", error);
+                }
+            }
+            
+            // NEW: Function to handle quiz deletion
+            async function deleteQuiz(event) {
+                // Use currentTarget to get the button element itself
+                const button = event.currentTarget;
+                const quizId = button.dataset.id;
+                
+                if (confirm(`Are you sure you want to delete quiz ${quizId}? This action cannot be undone.`)) {
+                    try {
+                        await api.delete(`/quiz/delete/${quizId}`);
+                        console.log(`Quiz with ID ${quizId} deleted successfully.`);
+                        alert('Quiz deleted successfully!');
+                        fetchCategoriesAndQuizzes(); // Refresh the list
+                    } catch (error) {
+                        console.error(`Failed to delete quiz with ID ${quizId}:`, error);
+                        
+                    }
+                }
+            }
+
+
+            document.getElementById('create-quiz-btn').addEventListener('click', async () => {
+                const category = document.getElementById('category').value;
+                const numq = document.getElementById('num-questions').value;
+                const title = document.getElementById('quiz-title-input').value;
+
+                if (!category || !numq || !title) {
+                    alert('Please fill out all fields to create a quiz.');
+                    return;
+                }
+                try {
+                    await api.post(`/quiz/create?catagory=${encodeURIComponent(category)}&noq=${numq}&title=${encodeURIComponent(title)}`, {});
+                    alert('Quiz created successfully!');
+                    fetchCategoriesAndQuizzes(); // Refresh the list
+                    document.getElementById('quiz-title-input').value = '';
+                } catch (error) {
+                     console.error("Failed to create quiz:", error);
+                }
+            });
+            
+            // --- Quiz Logic ---
+            async function startQuiz(event) {
+                currentQuizId = event.currentTarget.dataset.id;
+                try {
+                    questions = await api.get(`/quiz/get/${currentQuizId}`);
+                    if (!questions || questions.length === 0) {
+                        alert('This quiz has no questions. Please add questions to the corresponding category.');
+                        return;
+                    }
+                    const quiz = (await api.get('/quiz/all')).find(q => q.id == currentQuizId);
+                    document.getElementById('quiz-title-display').textContent = quiz.title;
+                    currentQuestionIndex = 0;
+                    userResponses = new Array(questions.length).fill(null);
+                    showPage('quiz-page');
+                    displayQuestion();
+                } catch (error) {
+                    console.error("Failed to start quiz:", error);
+                }
+            }
+            
+            function displayQuestion() {
+                const question = questions[currentQuestionIndex];
+                document.getElementById('question-counter').textContent = `Question ${currentQuestionIndex + 1} / ${questions.length}`;
+                document.getElementById('question-text').textContent = question.questionTitle;
+                
+                const optionsContainer = document.getElementById('options');
+                optionsContainer.innerHTML = '';
+                const options = [question.option1, question.option2, question.option3, question.option4];
+                options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'p-4 border rounded-lg hover:bg-indigo-50 cursor-pointer';
+                    optionEl.innerHTML = `<label class="flex items-center w-full cursor-pointer">
+                        <input type="radio" name="option" value="${option}" class="mr-4 h-5 w-5 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-lg">${option}</span></label>`;
+                    optionsContainer.appendChild(optionEl);
+                });
+
+                if (userResponses[currentQuestionIndex]) {
+                    document.querySelector(`input[value="${userResponses[currentQuestionIndex].response}"]`).checked = true;
+                }
+
+                document.getElementById('prev-btn').classList.toggle('hidden', currentQuestionIndex === 0);
+                document.getElementById('next-btn').classList.toggle('hidden', currentQuestionIndex === questions.length - 1);
+                document.getElementById('submit-btn').classList.toggle('hidden', currentQuestionIndex !== questions.length - 1);
+            }
+
+            function saveResponse() {
+                const selected = document.querySelector('input[name="option"]:checked');
+                if (selected) {
+                    userResponses[currentQuestionIndex] = { id: questions[currentQuestionIndex].id, response: selected.value };
+                }
+            }
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                saveResponse();
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    displayQuestion();
+                }
+            });
+
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                saveResponse();
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    displayQuestion();
+                }
+            });
+
+            document.getElementById('submit-btn').addEventListener('click', async () => {
+                saveResponse();
+                const formattedResponses = userResponses.filter(r => r !== null);
+                if (formattedResponses.length !== questions.length) {
+                    if(!confirm("You have unanswered questions. Are you sure you want to submit?")) {
+                        return;
+                    }
+                }
+                try {
+                    const result = await api.post(`/quiz/submit/${currentQuizId}`, formattedResponses);
+                    document.getElementById('score').textContent = `Your Score: ${result} / ${questions.length}`;
+                    showPage('result-page');
+                } catch (error) {
+                    console.error("Failed to submit quiz:", error);
+                }
+            });
+
+            document.getElementById('back-home-btn').addEventListener('click', () => {
+                showPage('home');
+                fetchCategoriesAndQuizzes();
+            });
+
+            // --- Add Question Page Logic ---
+            document.getElementById('add-question-submit-btn').addEventListener('click', async () => {
+                const newQuestion = {
+                    questionTitle: document.getElementById('new-q-title').value,
+                    option1: document.getElementById('new-q-opt1').value,
+                    option2: document.getElementById('new-q-opt2').value,
+                    option3: document.getElementById('new-q-opt3').value,
+                    option4: document.getElementById('new-q-opt4').value,
+                    rightAnswer: document.getElementById('new-q-answer').value,
+                    category: document.getElementById('new-q-category').value,
+                    difficultylevel: document.getElementById('new-q-difficulty').value
+                };
+
+                if (Object.values(newQuestion).some(val => !val)) {
+                    alert('Please fill out all fields.');
+                    return;
+                }
+                try {
+                    await api.post('/question/addquestion', newQuestion);
+                    alert('Question added successfully!');
+                    // Clear form
+                    document.querySelectorAll('#add-question-page input, #add-question-page select').forEach(el => el.value = '');
+                } catch (error) {
+                    console.error("Failed to add question:", error);
+                }
+            });
+
+            // --- View All Questions Page ---
+            async function fetchAllQuestions() {
+                try {
+                    const allQuestions = await api.get('/question/allquestions');
+                    const tableBody = document.getElementById('all-questions-table');
+                    tableBody.innerHTML = '';
+                    if (!allQuestions || allQuestions.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" class="text-center p-4">No questions found.</td></tr>';
+                        return;
+                    }
+                    allQuestions.forEach(q => {
+                        tableBody.innerHTML += `<tr class="border-b border-gray-100">
+                            <td class="p-3">${q.id}</td>
+                            <td class="p-3">${q.questionTitle}</td>
+                            <td class="p-3">${q.category}</td>
+                            <td class="p-3">${q.difficultylevel}</td>
+                        </tr>`;
+                    });
+                } catch (error) {
+                    console.error("Failed to fetch all questions:", error);
+                }
+            }
+
+            // --- Questions by Category Page ---
+            async function populateCategoryFilter() {
+                try {
+                    const allQuestions = await api.get('/question/allquestions');
+                    const categories = [...new Set(allQuestions.map(q => q.category))];
+                    const categoryFilter = document.getElementById('category-filter');
+                    categoryFilter.innerHTML = '<option value="">-- Select a Category --</option>';
+                    categories.forEach(cat => categoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`);
+                } catch (error) {
+                    console.error("Failed to populate category filter:", error);
+                }
+            }
+
+            document.getElementById('category-filter').addEventListener('change', async (e) => {
+                const category = e.target.value;
+                const tableBody = document.getElementById('category-questions-table');
+                if (!category) {
+                    tableBody.innerHTML = '';
+                    return;
+                }
+                try {
+                    const questionsByCategory = await api.get(`/question/catagory/${category}`);
+                    tableBody.innerHTML = '';
+                    if (!questionsByCategory || questionsByCategory.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">No questions found for this category.</td></tr>';
+                        return;
+                    }
+                    questionsByCategory.forEach(q => {
+                        tableBody.innerHTML += `<tr class="border-b border-gray-100">
+                            <td class="p-3">${q.id}</td>
+                            <td class="p-3">${q.questionTitle}</td>
+                            <td class="p-3">${q.rightAnswer}</td>
+                        </tr>`;
+                    });
+                } catch (error) {
+                     console.error("Failed to fetch questions by category:", error);
+                }
+            });
+
+            // --- Initial Load ---
+            fetchCategoriesAndQuizzes();
+        });
+    </script>
+</body>
+</html>
